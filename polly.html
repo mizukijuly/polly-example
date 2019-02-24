@@ -1,0 +1,85 @@
+<html>
+<head>
+  <meta name="description" content="Voice generation tutorial">
+  <meta name="keywords" content="polly artificial voice AI AWS Amazon">
+  <meta name="author" content="Mizuki Kamata">
+  <title>Voice generation</title>
+    <h2>Demo</h2>
+    <input type="text" id="myText" value="Please enter words">
+    <button type="button" onclick="loadVoice()">Try it</button>
+    <p class="text-warning">It works on Android, Chrome/MS Edge</p>
+    <p>Choose preferred voice</p>
+    <div id="voices" class="form-check-inline text-light">
+        <input type="radio" class="form-check-input" name="optradio" value="Salli" checked="checked">Salli
+        <input type="radio" class="form-check-input" name="optradio" value="Kimberly">Kimberly
+        <input type="radio" class="form-check-input" name="optradio" value="Ivy">Ivy
+        <input type="radio" class="form-check-input" name="optradio" value="Matthew">Matthew
+        <input type="radio" class="form-check-input" name="optradio" value="Joanna">Joanna
+        <input type="radio" class="form-check-input" name="optradio" value="Kendra">Kendra
+        <input type="radio" class="form-check-input" name="optradio" value="Justin">Justin
+        <input type="radio" class="form-check-input" name="optradio" value="Joey">Joey
+    </div>
+    <hr>
+    <br>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.16.0.min.js"></script>
+<script>
+function loadVoice() {
+  AnonLog();
+  var polly = new AWS.Polly();
+  console.log("function loadVoice called");
+  var text = document.getElementById("myText").value;
+  var voices = document.getElementsByName('optradio');
+  var voiceId;
+  for(var i = 0; i < voices.length; i++){
+      if(voices[i].checked){
+          voiceId = voices[i].value;
+      }
+  }
+ var params = {
+  OutputFormat: "mp3", 
+  SampleRate: "8000", 
+  Text: text,
+  TextType: "text", 
+  VoiceId: voiceId
+ };
+ polly.synthesizeSpeech(params, function(err, data) {
+   if (err) console.log(err, err.stack); // an error occurred
+   else     makeSound(data);           // successful response
+   /*
+   data = {
+    AudioStream: <Binary String>, 
+    ContentType: "audio/mpeg", 
+    RequestCharacters: 37
+   }
+   */
+ });
+}
+function makeSound(data){
+  console.log("makeSound called");
+  var uInt8Array = new Uint8Array(data.AudioStream);
+  var arrayBuffer = uInt8Array.buffer;
+  var blob = new Blob([arrayBuffer]);
+  var url = URL.createObjectURL(blob);
+  var elementId = "audioElement" + new Date().valueOf().toString();
+  var audioElement = document.createElement('audio');
+  audioElement.setAttribute("id", elementId);
+  audioElement.src = url;
+  audioElement.play();
+}
+  //Provides anonymous log on to AWS services
+  function AnonLog() {
+    // Configure the credentials provider to use your identity pool
+    AWS.config.region = 'us-east-1'; // Region
+    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: 'us-east-1:61d40d9d-968f-4568-9004-ca585b5eb1a9',
+    });
+    // Make the call to obtain credentials
+    AWS.config.credentials.get(function () {
+      // Credentials will be available when this function is called.
+      var accessKeyId = AWS.config.credentials.accessKeyId;
+      var secretAccessKey = AWS.config.credentials.secretAccessKey;
+      var sessionToken = AWS.config.credentials.sessionToken;
+    });
+  }
+</script>
+</html>
